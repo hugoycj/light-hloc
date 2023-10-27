@@ -5,3 +5,6 @@ __pycache__
 outputs/
 datasets/*
 !datasets/sacre_coeur/
+build
+data
+dist

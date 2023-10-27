@@ -1,0 +1,18 @@
+# pyproject.toml
+[project]
+name = "lighthloc"
+version = "0.1.0"
+description = '''
+A light and fast implementation of hloc with TensorRT
+'''
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]
+
+[project.scripts]
+# Note, add entrypoint name to scripts/completions/install.py to include CLI completion
+hloc-process-data = "lighthloc.pipeline:main"
