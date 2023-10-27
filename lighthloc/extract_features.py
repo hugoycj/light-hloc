@@ -98,24 +98,9 @@ confs = {
         },
     },
     # Global descriptors
-    'dir': {
-        'output': 'global-feats-dir',
-        'model': {'name': 'dir'},
-        'preprocessing': {'resize_max': 1024},
-    },
     'netvlad': {
         'output': 'global-feats-netvlad',
         'model': {'name': 'netvlad'},
-        'preprocessing': {'resize_max': 1024},
-    },
-    'openibl': {
-        'output': 'global-feats-openibl',
-        'model': {'name': 'openibl'},
-        'preprocessing': {'resize_max': 1024},
-    },
-    'cosplace': {
-        'output': 'global-feats-cosplace',
-        'model': {'name': 'cosplace'},
         'preprocessing': {'resize_max': 1024},
     }
 }
