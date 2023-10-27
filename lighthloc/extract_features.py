@@ -76,17 +76,6 @@ confs = {
             'resize_max': 1024,
         },
     },
-    'd2net-ss': {
-        'output': 'feats-d2net-ss',
-        'model': {
-            'name': 'd2net',
-            'multiscale': False,
-        },
-        'preprocessing': {
-            'grayscale': False,
-            'resize_max': 1600,
-        },
-    },
     'sift': {
         'output': 'feats-sift',
         'model': {
