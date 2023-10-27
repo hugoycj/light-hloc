@@ -3,9 +3,9 @@ from pathlib import Path
 import numpy as np
 import scipy.spatial
 
-from . import logger
-from .utils.read_write_model import read_images_binary
-from .pairs_from_retrieval import pairs_from_score_matrix
+from .. import logger
+from ..utils.read_write_model import read_images_binary
+from ..pairs_from_retrieval import pairs_from_score_matrix
 
 DEFAULT_ROT_THRESH = 30  # in degrees
 

@@ -3,9 +3,9 @@ import collections.abc as collections
 from pathlib import Path
 from typing import Optional, Union, List
 
-from . import logger
-from .utils.parsers import parse_image_lists
-from .utils.io import list_h5_names
+from .. import logger
+from ..utils.parsers import parse_image_lists
+from ..utils.io import list_h5_names
 
 
 def main(

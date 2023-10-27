@@ -4,8 +4,8 @@ import numpy as np
 from tqdm import tqdm
 from collections import defaultdict
 
-from . import logger
-from .utils.read_write_model import read_model
+from .. import logger
+from ..utils.read_write_model import read_model
 
 
 def main(model, output, num_matched):
