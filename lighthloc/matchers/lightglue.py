@@ -1,5 +1,5 @@
 from ..utils.base_model import BaseModel
-from lightglue import LightGlue as LightGlue_
+from .modules.lightglue import LightGlue as LightGlue_
 
 class LightGlue(BaseModel):
     default_conf = {

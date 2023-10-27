@@ -28,6 +28,13 @@ confs = {
             'features': 'superpoint',
         },
     },
+    'superpoint+lightglue_onnx': {
+        'output': 'matches-superpoint-lightglue_onnx',
+        'model': {
+            'name': 'lightglue_onnx',
+            'features': 'superpoint',
+        },
+    },
     'disk+lightglue': {
         'output': 'matches-disk-lightglue',
         'model': {
