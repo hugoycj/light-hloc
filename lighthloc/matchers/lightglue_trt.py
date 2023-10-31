@@ -1,5 +1,4 @@
 from ..utils.base_model import BaseModel
-from .modules.lightglue_onnx import LightGlue as LightGlue_
 import onnxruntime as ort
 import torch
 import time
@@ -32,7 +31,7 @@ class LightGlue(BaseModel):
             ] + providers
             
         self.net = ort.InferenceSession(
-            'lighthloc/matchers/modules/weights/superpoint_lightglue.onnx', sess_options=sess_options, providers=providers
+            'lighthloc/matchers/superpoint_lightglue.onnx', sess_options=sess_options, providers=providers
         )
         
     def _forward(self, data):
