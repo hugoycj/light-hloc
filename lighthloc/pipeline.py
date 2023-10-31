@@ -6,10 +6,9 @@ import click
 
 @click.command()
 @click.option('--data', type=str, help='Path to data directory')
-@click.option('--output-dir', type=str, help='Path to output directory')
-@click.option('--match-type', default='retrival', help='Type of matching to perform', type=click.Choice(['exhaustive', 'sequential', 'retrival']))
-@click.option('--feature-type', default='superpoint_inloc', help='Type of feature extraction', type=click.Choice(['superpoint_inloc', 'superpoint_aachen']))
-@click.option('--matcher-type', default='superpoint+lightglue', help='Type of feature matching', type=click.Choice(['superpoint+lightglue', 'superpoint+lightglue_onnx', 'superglue']))
+@click.option('--match-type', default='retrival', help='Type of matching to perform (default: retrival)', type=click.Choice(['exhaustive', 'sequential', 'retrival']))
+@click.option('--feature-type', default='superpoint_inloc', help='Type of feature extraction (default: superpoint_inloc)', type=click.Choice(['superpoint_inloc', 'superpoint_aachen']))
+@click.option('--matcher-type', default='lightglue', help='Type of feature matching (default: lightglue)', type=click.Choice(['lightglue', 'lightglue_trt', 'superglue']))
 def main(data, match_type, feature_type, matcher_type):
     images = Path(data) / 'images/'
     outputs = Path(data)

@@ -21,17 +21,24 @@ line using their name. Each is a dictionary with the following entries:
     - model: the model configuration, as passed to a feature matcher.
 '''
 confs = {
-    'superpoint+lightglue': {
-        'output': 'matches-superpoint-lightglue',
+    'lightglue': {
+        'output': 'matches-lightglue',
         'model': {
             'name': 'lightglue',
             'features': 'superpoint',
         },
     },
-    'superpoint+lightglue_onnx': {
-        'output': 'matches-superpoint-lightglue_onnx',
+    'lightglue_onnx': {
+        'output': 'matches-lightglue_onnx',
         'model': {
             'name': 'lightglue_onnx',
+            'features': 'superpoint',
+        },
+    },
+    'lightglue_trt': {
+        'output': 'matches-lightglue_trt',
+        'model': {
+            'name': 'lightglue_trt',
             'features': 'superpoint',
         },
     },
