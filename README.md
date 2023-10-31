@@ -63,3 +63,5 @@ hloc-process-data --data ${INPUT_DIR} --feature-type superpoint_aachen --match-t
 Using the "sequential" feature type can help expedite the processing time while still providing reasonable results.
 
 By following these recommendations, you can optimize your SFM pipeline based on your specific needs, whether you prioritize accuracy, speed, or a balance between the two.
+
+*An experimental version of TensorRT-accelerated LightGlue has been provided. However, the overall efficiency is currently poor due to the time required to transfer intermediate data from the GPU to the CPU and then convert it to ONNX tensor. There is potential for improvement in the future, which could boost efficiency.*
