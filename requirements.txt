@@ -10,5 +10,4 @@ h5py
 pycolmap>=0.3.0
 kornia==0.7.0
 gdown
-tensorrt==8.0.1.6
 onnxruntime-gpu

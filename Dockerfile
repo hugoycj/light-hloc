@@ -1,5 +1,4 @@
-
-FROM nvcr.io/nvidia/pytorch:21.08-py3
+FROM nvcr.io/nvidia/pytorch:23.10-py3
 
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends unzip wget libgl1 && \
