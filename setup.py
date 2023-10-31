@@ -11,6 +11,7 @@ else:
     raise ValueError("requirements.txt doesn't exist. Please create the file and specify project dependencies.")
 
 setup(
+    name = "lighthloc",
     packages=find_packages(),
     python_requires=">=3.6",
     install_requires=dependencies,
