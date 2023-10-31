@@ -5,9 +5,10 @@
 `hloc` requires Python >=3.7 and PyTorch >=1.1. Installing the package locally pulls the other dependencies:
 
 ```bash
-git clone --recursive https://github.com/hugoycj/lighthloc/
+git clone --recursive https://github.com/hugoycj/light-hloc
 cd lighthloc/
-python setup.py develop
+pip install --upgrade pip setuptools
+pip install -e .
 ```
 
 ## How to use
@@ -65,3 +66,11 @@ Using the "sequential" feature type can help expedite the processing time while 
 By following these recommendations, you can optimize your SFM pipeline based on your specific needs, whether you prioritize accuracy, speed, or a balance between the two.
 
 *An experimental version of TensorRT-accelerated LightGlue has been provided. However, the overall efficiency is currently poor due to the time required to transfer intermediate data from the GPU to the CPU and then convert it to ONNX tensor. There is potential for improvement in the future, which could boost efficiency.*
+```
+hloc-process-data --data ${INPUT_DIR} --feature-type superpoint_aachen --match-type sequential --matcher-type lightglue_trt
+```
+
+## TODO
+[ ] Add spatial assotiators based on GPS information
+[ ] Add remote viewer to visualize sfm results
+[ ] Add option to use Pixel Perfect SFM
