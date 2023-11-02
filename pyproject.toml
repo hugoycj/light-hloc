@@ -16,3 +16,4 @@ exclude = ["tests*"]
 [project.scripts]
 # Note, add entrypoint name to scripts/completions/install.py to include CLI completion
 hloc-process-data = "lighthloc.pipeline:main"
+hloc-view = "lighthloc.viewer:main"

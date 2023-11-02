@@ -10,4 +10,6 @@ h5py
 pycolmap>=0.3.0
 kornia==0.7.0
 gdown
+viser
+click
 onnxruntime-gpu
