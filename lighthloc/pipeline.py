@@ -4,12 +4,19 @@ from lighthloc.associators import pairs_from_retrieval, pairs_from_exhaustive, p
 from pathlib import Path
 import click
 
+mapper_confs = {
+    'default' : {},
+    'fast' : {'ba_global_max_num_iterations': 20, "ba_global_max_refinements":1, 
+              "ba_global_points_freq":200000}
+}
+
 @click.command()
 @click.option('--data', type=str, help='Path to data directory')
 @click.option('--match-type', default='retrival', help='Type of matching to perform (default: retrival)', type=click.Choice(['exhaustive', 'sequential', 'retrival']))
 @click.option('--feature-type', default='superpoint_inloc', help='Type of feature extraction (default: superpoint_inloc)', type=click.Choice(['superpoint_inloc', 'superpoint_aachen']))
 @click.option('--matcher-type', default='lightglue', help='Type of feature matching (default: lightglue)', type=click.Choice(['lightglue', 'lightglue_trt', 'superglue']))
-def main(data, match_type, feature_type, matcher_type):
+@click.option('--mapper-type', default='default', help='Type of mapper (default: default)', type=click.Choice(['default', 'fast']))
+def main(data, match_type, feature_type, matcher_type, mapper_type):
     images = Path(data) / 'images/'
     outputs = Path(data)
 
@@ -21,7 +28,6 @@ def main(data, match_type, feature_type, matcher_type):
 
     feature_conf = extract_features.confs[feature_type]
     matcher_conf = match_features.confs[matcher_type]
-
     assert match_type in ['exhaustive', 'sequential', 'retrival']
     if match_type == 'exhaustive':
         references = [p.relative_to(images).as_posix() for p in images.iterdir()]
@@ -29,13 +35,13 @@ def main(data, match_type, feature_type, matcher_type):
         extract_features.main(feature_conf, images, image_list=references, feature_path=features)
         pairs_from_exhaustive.main(sfm_pairs, image_list=references)
         match_features.main(matcher_conf, sfm_pairs, features=features, matches=matches)
-        reconstruction.main(sfm_dir, images, sfm_pairs, features, matches, image_list=references, image_options={'camera_model': 'OPENCV'})
+        reconstruction.main(sfm_dir, images, sfm_pairs, features, matches, image_list=references, image_options={'camera_model': 'OPENCV'}, mapper_options=mapper_confs[mapper_type])
     elif match_type == 'sequential':
         references = [p.relative_to(images).as_posix() for p in images.iterdir()]
         pairs_from_sequance.main(sfm_pairs, image_list=references, overlap=10, quadratic_overlap=True)
         extract_features.main(feature_conf, images, image_list=references, feature_path=features)
         match_features.main(matcher_conf, sfm_pairs, features=features, matches=matches)
-        reconstruction.main(sfm_dir, images, sfm_pairs, features, matches, image_list=references, image_options={'camera_model': 'OPENCV'})
+        reconstruction.main(sfm_dir, images, sfm_pairs, features, matches, image_list=references, image_options={'camera_model': 'OPENCV'}, mapper_options=mapper_confs[mapper_type])
     else:
         retrieval_conf = extract_features.confs['netvlad']
         retrieval_path = extract_features.main(retrieval_conf, images, outputs)
@@ -44,7 +50,7 @@ def main(data, match_type, feature_type, matcher_type):
         feature_path = extract_features.main(feature_conf, images, outputs)
         match_path = match_features.main(matcher_conf, sfm_pairs, feature_conf['output'], outputs)
 
-        reconstruction.main(sfm_dir, images, sfm_pairs, feature_path, match_path, image_options={'camera_model': 'OPENCV'})
+        reconstruction.main(sfm_dir, images, sfm_pairs, feature_path, match_path, image_options={'camera_model': 'OPENCV'}, mapper_options=mapper_confs[mapper_type])
 
 
 

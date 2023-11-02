@@ -48,6 +48,7 @@ Options:
   --matcher-type [lightglue|lightglue_trt|superglue]
                                   Type of feature matching (default:
                                   lightglue)
+  --mapper-type [default|fast]    Type of mapper (default: default)
   --help                          Show this message and exit.
 ```
 
@@ -67,7 +68,7 @@ However, if your input data is extracted from a sequential video and your primar
 
 If your input data is extracted from a sequential video and want to get a fast results, we recommand you to use
 ```
-hloc-process-data --data ${INPUT_DIR} --feature-type superpoint_aachen --match-type sequential --matcher-type lightglue
+hloc-process-data --data ${INPUT_DIR} --feature-type superpoint_aachen --match-type sequential --matcher-type lightglue --mapper-type fast
 ```
 Using the "sequential" feature type can help expedite the processing time while still providing reasonable results.
 
