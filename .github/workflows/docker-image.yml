@@ -15,4 +15,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag hugoycj/light-hloc:$(date +%s)
+      run: docker build . --file Dockerfile --tag hugoycj/light-hloc:$(date +%Y%m%d%H%M%S)
