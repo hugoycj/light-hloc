@@ -7,7 +7,7 @@ import numpy as onp
 import tyro
 from tqdm.auto import tqdm
 import click
-
+import numpy as np
 import viser
 import viser.transforms as tf
 from viser.extras.colmap import (
@@ -15,6 +15,109 @@ from viser.extras.colmap import (
     read_images_binary,
     read_points3d_binary,
 )
+
+def error_to_confidence(error):
+    # Here smaller_beta means slower transition from 0 to 1.
+    # Increasing beta raises steepness of the curve.
+    beta = 1
+    # confidence = 1 / np.exp(beta*error)
+    confidence = 1 / (1 + np.exp(beta*error))
+    return confidence
+
+def get_center(pts):
+    center = pts.mean(0)
+    dis = np.linalg.norm(pts - center[None,:], axis=1)
+    mean, std = dis.mean(), dis.std()
+    q25, q75 = np.quantile(dis, 0.25), np.quantile(dis, 0.75)
+    valid = (dis > mean - 1.5 * std) & (dis < mean + 1.5 * std) & (dis > mean - (q75 - q25) * 1.5) & (dis < mean + (q75 - q25) * 1.5)
+    center = pts[valid].mean(0)
+    return center
+
+def normalize_poses(poses, pts, up_est_method, center_est_method, pts3d_normal=None):
+    import numpy as np
+    poses = np.array(poses)
+    pts = np.array(pts)
+
+    if center_est_method == 'camera':
+        center = np.mean(poses[..., 3], axis=0)
+    elif center_est_method == 'lookat':
+        cams_ori = poses[..., 3]
+        cams_dir = np.matmul(poses[:, :3, :3], np.array([0., 0., -1.]))
+        cams_dir = cams_dir / np.linalg.norm(cams_dir, axis=-1, keepdims=True)
+        A = np.stack([cams_dir, -np.roll(cams_dir, 1, axis=0)], axis=-1)
+        b = -cams_ori + np.roll(cams_ori, 1, 0)        
+        t = np.linalg.lstsq(A, b)[0]
+        center = np.mean(np.stack([cams_dir, np.roll(cams_dir, 1, 0)], axis=-1) * t[:, None, :] + np.stack([cams_ori, np.roll(cams_ori, 1, 0)], axis=-1), axis=(0, 2))
+    elif center_est_method == 'point':
+        center = np.mean(poses[..., 3], axis=0)
+    else:
+        raise NotImplementedError(f'Unknown center estimation method: {center_est_method}')
+
+    if up_est_method == 'ground':
+        import pyransac3d as pyrsc
+
+        ground = pyrsc.Plane()
+        plane_eq, inliers = ground.fit(pts, thresh=0.01)
+        plane_eq = np.array(plane_eq)
+        z = plane_eq[:3] / np.linalg.norm(plane_eq[:3])
+        signed_distance = np.sum(np.concatenate([pts, np.ones_like(pts[..., :1])], axis=-1) * plane_eq, axis=-1)
+        if np.mean(signed_distance) < 0:
+            z = -z
+    elif up_est_method == 'camera':
+        z = np.mean(poses[..., 3] - center, axis=0)
+        z = z / np.linalg.norm(z)
+    else:
+        raise NotImplementedError(f'Unknown up estimation method: {up_est_method}')
+
+    y_ = np.array([z[1], -z[0], 0.])
+    x = np.cross(y_, z) / np.linalg.norm(np.cross(y_, z))
+    y = np.cross(z, x)
+
+    if center_est_method == 'point':
+        # rotation
+        Rc = np.stack([x, y, z], axis=1)
+        R = np.transpose(Rc)
+        poses_homo = np.concatenate([poses, np.array([[[0.,0.,0.,1.]]]).repeat(poses.shape[0], axis=0)], axis=1)
+        inv_trans = np.concatenate([np.concatenate([R, np.array([[0.,0.,0.]]).T], axis=1), np.array([[0.,0.,0.,1.]])], axis=0)
+        poses_norm = (inv_trans @ poses_homo)[:,:3]
+        pts = (inv_trans @ np.concatenate([pts, np.ones_like(pts[:,0:1])], axis=-1)[...,None])[:,:3,0]
+
+        # translation and scaling
+        poses_min, poses_max = np.min(poses_norm[...,3], axis=0), np.max(poses_norm[...,3], axis=0)
+        pts_fg = pts[(poses_min[0] < pts[:,0]) & (pts[:,0] < poses_max[0]) & (poses_min[1] < pts[:,1]) & (pts[:,1] < poses_max[1])]
+        center = get_center(pts_fg)
+        tc = np.reshape(center, (3, 1))
+        t = -tc
+        poses_homo = np.concatenate([poses_norm, np.array([[[0.,0.,0.,1.]]]).repeat(poses_norm.shape[0], axis=0)], axis=1)
+        inv_trans = np.concatenate([np.concatenate([np.eye(3), t], axis=1), np.array([[0.,0.,0.,1.]])], axis=0)
+        poses_norm = (inv_trans @ poses_homo)[:,:3]
+        scale = np.min(np.linalg.norm(poses_norm[...,3], ord=2, axis=-1))
+        poses_norm[...,3] /= scale
+        pts = (inv_trans @ np.concatenate([pts, np.ones_like(pts[:,0:1])], axis=-1)[...,None])[:,:3,0]
+
+        # apply the rotation to the point cloud normal
+        if pts3d_normal is not None:
+            pts3d_normal = np.transpose(R @ np.transpose(pts3d_normal))
+
+        pts = pts / scale
+
+    else:
+        Rc = np.stack([x, y, z], axis=1)
+        tc = np.reshape(center, (3, 1))
+        R, t = np.transpose(Rc), -np.matmul(np.transpose(Rc), tc)
+        poses_homo = np.concatenate([poses, np.ones([poses.shape[0], 1, 1]).repeat(poses.shape[1], axis=1)], axis=-1)
+        inv_trans = np.concatenate([np.concatenate([R, t], axis=1), np.array([[0., 0., 0., 1.]])], axis=0)
+        poses_norm = np.matmul(inv_trans, poses_homo)[:, :3]
+
+        scale = np.min(np.linalg.norm(poses_norm[..., 3], axis=-1))
+        poses_norm[..., 3] /= scale
+
+        pts = np.matmul(inv_trans, np.concatenate([pts, np.ones_like(pts[:, :1])], axis=-1)[:, :, None])[:, :3, 0]
+        if pts3d_normal is not None:
+            pts3d_normal = np.matmul(R, np.transpose(pts3d_normal)).T
+        pts = pts / scale
+
+    return poses_norm, pts, pts3d_normal
 
 @click.command()
 @click.option('--data', help='Path to data directory')
@@ -44,6 +147,24 @@ def main(
         hint="Set the camera control 'up' direction to the current camera's 'up'.",
     )
 
+    # Preprocess colmap data
+    all_c2w = []
+    for i, d in enumerate(images.values()):
+        R = d.qvec2rotmat()
+        t = d.tvec.reshape(3, 1)
+        c2w = np.concatenate([R.T, -R.T@t], axis=1)
+        c2w[:,1:3] *= -1. # COLMAP => OpenGL
+        # c2w = np.vstack((c2w, [0, 0, 0, 1])) # making c2w homogeneous
+        all_c2w.append(c2w)
+    all_c2w = np.array(all_c2w)
+
+    pts3d_confidence = np.array([error_to_confidence(points3d[k].error) for k in points3d])
+    pts3d_color = np.array([points3d[k].rgb for k in points3d])
+    pts3d = np.array([points3d[k].xyz for k in points3d])
+    sorted_indices = np.argsort(pts3d_confidence)
+    
+    normalized_c2w, normalized_pts3d, _ = normalize_poses(all_c2w, pts3d, up_est_method='ground', center_est_method='point')
+        
     @gui_reset_up.on_click
     def _(event: viser.GuiEvent) -> None:
         client = event.client
@@ -55,9 +176,9 @@ def main(
     gui_points = server.add_gui_slider(
         "Max points",
         min=1,
-        max=len(points3d),
+        max=len(pts3d),
         step=1,
-        initial_value=min(len(points3d), 50_000),
+        initial_value=min(len(pts3d), 50_000),
     )
     gui_frames = server.add_gui_slider(
         "Max frames",
@@ -72,14 +193,9 @@ def main(
         """Send all COLMAP elements to viser for visualization. This could be optimized
         a ton!"""
         # Set the point cloud.
-        points = onp.array([points3d[p_id].xyz for p_id in points3d])
-        colors = onp.array([points3d[p_id].rgb for p_id in points3d])
-        points_selection = onp.random.choice(
-            points.shape[0], gui_points.value, replace=False
-        )
-        points = points[points_selection]
-        colors = colors[points_selection]
-
+        points_selection = sorted_indices[:gui_points.value]
+        points = pts3d[points_selection]
+        colors = pts3d_color[points_selection]
         server.add_point_cloud(
             name="/colmap/pcd",
             points=points,
