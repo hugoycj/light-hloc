@@ -10,7 +10,7 @@ A light and fast implementation of hloc with TensorRT
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools.packages.find]
+[tool.setuptools.packages]
 exclude = ["tests*"]
 
 [project.scripts]
