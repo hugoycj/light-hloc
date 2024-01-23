@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 
 mapper_confs = {
-    'default' : {},
+    'default' : {'ba_refine_principal_point': 1,},
     'fast' : {'ba_global_max_num_iterations': 20, "ba_global_max_refinements":1, 
               "ba_global_points_freq":200000}
 }
