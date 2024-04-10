@@ -7,7 +7,25 @@ A light and fast implementation of hloc with TensorRT
 '''
 
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = [
+    "setuptools>=42",
+    "wheel",
+    "torch>=1.1",
+    "torchvision>=0.3",
+    "numpy",
+    "opencv-python-headless==3.4.18.65",
+    "tqdm>=4.36.0",
+    "matplotlib",
+    "plotly",
+    "scipy",
+    "h5py",
+    "pycolmap>=0.3.0",
+    "kornia==0.7.0",
+    "gdown",
+    "viser",
+    "click",
+    "onnxruntime-gpu"
+]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
